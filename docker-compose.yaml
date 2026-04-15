@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: bike_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb+srv://bikerental:saranya@cluster0.602qj8l.mongodb.net/?appName=Cluster0
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./frontend
+    container_name: bike_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  mongo:
+    image: mongo:6
+    container_name: bike_mongo
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
