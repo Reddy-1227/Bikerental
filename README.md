@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Bike Rental Application
 
 A full-stack bike rental application with React frontend and Node.js/Express backend with MongoDB.
@@ -183,3 +184,6 @@ VITE_API_BASE=https://api.yourdomain.com/api
 ## License
 
 MIT
+=======
+# Bikerental
+>>>>>>> abb2c057b5d34db5c38be19fc2f5ed6faf3bcffa
