@@ -5,41 +5,59 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-push:
+  build-scan-push:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
 
+    # 🔷 Docker Build
     - name: Build Backend Image
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:latest ./backend
+      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }} ./backend
 
     - name: Build Frontend Image
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest ./frontend
+      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }} ./frontend
 
-    # ✅ Trivy Scan (Backend)
+    # 🔷 Cache Trivy DB (faster scans)
+    - name: Cache Trivy DB
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/trivy
+        key: trivy-cache
+        restore-keys: trivy-cache
+
+    # 🔷 Trivy Scan Backend
     - name: Scan Backend Image
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.20.0
       with:
-        image-ref: ${{ secrets.DOCKER_USERNAME }}/backend:latest
+        image-ref: ${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }}
         exit-code: '1'
         severity: 'HIGH,CRITICAL'
         ignore-unfixed: true
 
-    # ✅ Trivy Scan (Frontend)
+    # 🔷 Trivy Scan Frontend
     - name: Scan Frontend Image
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.20.0
       with:
-        image-ref: ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+        image-ref: ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }}
         exit-code: '1'
         severity: 'HIGH,CRITICAL'
         ignore-unfixed: true
 
+    # 🔷 Docker Login
     - name: Login to DockerHub
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+    # 🔷 Push Images (only if scan passes)
     - name: Push Images
       run: |
+        docker push ${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }}
+
+        # also tag as latest
+        docker tag ${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/backend:latest
+        docker tag ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+
         docker push ${{ secrets.DOCKER_USERNAME }}/backend:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/frontend:latest
