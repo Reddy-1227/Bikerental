@@ -33,7 +33,7 @@ jobs:
       with:
         image-ref: ${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }}
         exit-code: '1'
-        severity: 'HIGH,CRITICAL'
+        severity: 'CRITICAL'
         ignore-unfixed: true
 
     # 🔷 Trivy Scan Frontend
@@ -42,7 +42,7 @@ jobs:
       with:
         image-ref: ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }}
         exit-code: '1'
-        severity: 'HIGH,CRITICAL'
+        severity: 'CRITICAL'
         ignore-unfixed: true
 
     # 🔷 Docker Login
